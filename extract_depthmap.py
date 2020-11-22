@@ -7,8 +7,7 @@ from objc_util import *
 class CImage(object):
 	def __init__(self, chosen_pic_data):
 		CIImage = ObjCClass('CIImage')
-		options = []
-		options = dict(options)
+		options = {}
 		options['kCIImageAuxiliaryDepth'] = ns(True)
 		options['kCIImageApplyOrientationProperty'] = ns(True)
 		self.ci_img = CIImage.imageWithData_options_(chosen_pic_data, options)
@@ -23,11 +22,6 @@ class CImage(object):
 		m = ctx.outputImageMaximumSize()
 		cg_img = ctx.createCGImage_fromRect_(self.ci_img, extent)
 		ui_img = UIImage.imageWithCGImage_(cg_img)
-		c.CGImageRelease.argtypes = [c_void_p]
-		c.CGImageRelease.restype = None
-		c.CGImageRelease(cg_img)
-		c.UIImagePNGRepresentation.argtypes = [c_void_p]
-		c.UIImagePNGRepresentation.restype = c_void_p
 		png_data = uiimage_to_png(ObjCInstance(ui_img))
 		return png_data
 
@@ -48,7 +42,7 @@ try:
 	
 	# This part makes sure that the whole 0-255 range is utilized in the depth map. Might or might not be useful to you.
 	x = np.array(chosen_pic_depth_image).astype(int)
-	if np.ptp(x) == 0: # Some Portrait photos have completely white depth map. Let's treat those as if there was no depth map at all.
+	if np.ptp(x) == 0: # Some Portrait photos have a completely white depth map. Let's treat those as if there was no depth map at all.
 		print('The selected portrait photo does not contain a depth map.')
 		quit()
 	x = (255*(x - np.min(x))/np.ptp(x)).astype(int)
